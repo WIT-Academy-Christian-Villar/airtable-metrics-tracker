@@ -1,0 +1,10 @@
+import { JsonApiRegistrationsProvider } from "./registrations/json-api-registrations.provider";
+import { NoopRegistrationsProvider } from "./registrations/noop-registrations.provider";
+import { JsonApiVisitsProvider } from "./visits/json-api-visits.provider";
+
+export const visitsProviders = [new JsonApiVisitsProvider()];
+
+export const registrationsProviders = [
+  new JsonApiRegistrationsProvider(),
+  new NoopRegistrationsProvider(),
+];
