@@ -8,6 +8,7 @@ import type {
 } from "../../types/provider";
 import { AppError } from "../../utils/errors";
 import { airtableClientService } from "./airtable-client.service";
+import { airtableSchemaService } from "./airtable-schema.service";
 
 const chunk = <T>(items: T[], size: number): T[][] => {
   const output: T[][] = [];
@@ -67,13 +68,19 @@ export class AirtableWriterService implements AirtableWriter {
       failed: 0,
       dryRun: false,
     };
+    const resolvedDestination = await airtableSchemaService.resolveDestination({
+      site: input.site,
+      logger: input.context.logger,
+    });
 
     for (const recordChunk of chunk(input.records, 10)) {
       const response = await airtableClientService.upsertRecords({
         baseId: input.site.airtable.baseId,
-        tableName: input.site.airtable.tableName,
-        records: recordChunk.map((record) => this.mapFields(input.site, record)),
-        upsertFields: input.site.airtable.upsertFields,
+        tableId: input.site.airtable.tableId,
+        records: recordChunk.map((record) =>
+          this.mapFields(resolvedDestination.fieldNames, record),
+        ),
+        upsertFields: resolvedDestination.upsertFieldNames,
         logger: input.context.logger,
       });
 
@@ -88,11 +95,9 @@ export class AirtableWriterService implements AirtableWriter {
   }
 
   private mapFields(
-    site: SiteConfig,
+    fieldMap: SiteConfig["airtable"]["fieldIds"],
     record: TrafficRecord,
   ): Record<string, unknown> {
-    const fieldMap = site.airtable.fieldMapping;
-
     return {
       [fieldMap.siteKey]: record.siteKey,
       [fieldMap.route]: record.route,

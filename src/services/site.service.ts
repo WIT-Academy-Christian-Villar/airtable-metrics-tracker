@@ -21,8 +21,8 @@ export class SiteService {
       routeRules: site.routeRules,
       airtable: {
         baseId: site.airtable.baseId,
-        tableName: site.airtable.tableName,
-        upsertFields: site.airtable.upsertFields,
+        tableId: site.airtable.tableId,
+        upsertFieldIds: site.airtable.upsertFieldIds,
       },
     }));
   }

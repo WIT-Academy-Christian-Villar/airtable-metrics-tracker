@@ -87,9 +87,11 @@ Cada sitio define:
 - provider de registros
 - reglas de ruta
 - mapeo de UTM
-- destino Airtable
+- destino Airtable por `baseId + tableId + fieldIds`
 
 La configuracion puede vivir en `src/config/sites.catalog.ts` o venir por `SITES_CONFIG_JSON`.
+
+La API ya no depende de nombres de tabla o nombres de campos en la configuracion. Internamente resuelve el schema actual de Airtable a partir de `tableId` y `fieldId`, para sobrevivir a renombres de columnas sin reconfigurar la integracion.
 
 ## Payload esperado por eventos
 
@@ -241,6 +243,16 @@ Crear una tabla como `Traffic Metrics` con estos campos:
 Se recomienda usar `Sync Key` como concatenacion estable de:
 
 `siteKey + route + utm_source + utm_medium + utm_campaign + utm_term + utm_content + dateBucket`
+
+## IDs de Airtable
+
+Para la configuracion productiva conviene usar:
+
+- `baseId`
+- `tableId`
+- `fieldId` de cada columna usada por la API
+
+Esto evita que un cambio de nombre en Airtable rompa la integracion. La API usa el schema de Airtable para resolver el nombre actual de cada campo cuando necesita consultar por `Sync Key`.
 
 ## Cola y concurrencia
 

@@ -20,7 +20,7 @@ export interface UTMMappingConfig {
   content: string[];
 }
 
-export interface AirtableFieldMapping {
+export interface AirtableFieldMap {
   siteKey: string;
   route: string;
   dateBucket: string;
@@ -38,9 +38,17 @@ export interface AirtableFieldMapping {
 
 export interface AirtableDestinationConfig {
   baseId: string;
+  tableId: string;
+  fieldIds: AirtableFieldMap;
+  upsertFieldIds: string[];
+}
+
+export interface ResolvedAirtableDestinationConfig {
+  baseId: string;
+  tableId: string;
   tableName: string;
-  fieldMapping: AirtableFieldMapping;
-  upsertFields: string[];
+  fieldNames: AirtableFieldMap;
+  upsertFieldNames: string[];
 }
 
 export interface SiteConfig {

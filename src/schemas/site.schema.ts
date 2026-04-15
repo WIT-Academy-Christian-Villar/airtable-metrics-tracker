@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-import { DEFAULT_AIRTABLE_FIELD_MAPPING } from "../config/constants";
-
 const providerBindingSchema = z.object({
   key: z.string().min(1),
   config: z.unknown().default({}),
@@ -22,30 +20,33 @@ const utmMappingSchema = z.object({
   content: z.array(z.string()).default(["utm_content", "content"]),
 });
 
-const airtableFieldMappingSchema = z.object({
-  siteKey: z.string().default(DEFAULT_AIRTABLE_FIELD_MAPPING.siteKey),
-  route: z.string().default(DEFAULT_AIRTABLE_FIELD_MAPPING.route),
-  dateBucket: z.string().default(DEFAULT_AIRTABLE_FIELD_MAPPING.dateBucket),
-  visits: z.string().default(DEFAULT_AIRTABLE_FIELD_MAPPING.visits),
-  registrations: z
-    .string()
-    .default(DEFAULT_AIRTABLE_FIELD_MAPPING.registrations),
-  utmSource: z.string().default(DEFAULT_AIRTABLE_FIELD_MAPPING.utmSource),
-  utmMedium: z.string().default(DEFAULT_AIRTABLE_FIELD_MAPPING.utmMedium),
-  utmCampaign: z.string().default(DEFAULT_AIRTABLE_FIELD_MAPPING.utmCampaign),
-  utmTerm: z.string().default(DEFAULT_AIRTABLE_FIELD_MAPPING.utmTerm),
-  utmContent: z.string().default(DEFAULT_AIRTABLE_FIELD_MAPPING.utmContent),
-  sources: z.string().default(DEFAULT_AIRTABLE_FIELD_MAPPING.sources),
-  capturedAt: z.string().default(DEFAULT_AIRTABLE_FIELD_MAPPING.capturedAt),
-  syncKey: z.string().default(DEFAULT_AIRTABLE_FIELD_MAPPING.syncKey),
+const airtableFieldIdsSchema = z.object({
+  siteKey: z.string().min(1),
+  route: z.string().min(1),
+  dateBucket: z.string().min(1),
+  visits: z.string().min(1),
+  registrations: z.string().min(1),
+  utmSource: z.string().min(1),
+  utmMedium: z.string().min(1),
+  utmCampaign: z.string().min(1),
+  utmTerm: z.string().min(1),
+  utmContent: z.string().min(1),
+  sources: z.string().min(1),
+  capturedAt: z.string().min(1),
+  syncKey: z.string().min(1),
 });
 
-const airtableSchema = z.object({
-  baseId: z.string().min(1),
-  tableName: z.string().min(1),
-  fieldMapping: airtableFieldMappingSchema.default(DEFAULT_AIRTABLE_FIELD_MAPPING),
-  upsertFields: z.array(z.string()).min(1).default(["Sync Key"]),
-});
+const airtableSchema = z
+  .object({
+    baseId: z.string().min(1),
+    tableId: z.string().min(1),
+    fieldIds: airtableFieldIdsSchema,
+    upsertFieldIds: z.array(z.string()).min(1).optional(),
+  })
+  .transform((value) => ({
+    ...value,
+    upsertFieldIds: value.upsertFieldIds ?? [value.fieldIds.syncKey],
+  }));
 
 export const siteConfigSchema = z.object({
   siteKey: z.string().min(1),

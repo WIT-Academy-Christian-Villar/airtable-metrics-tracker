@@ -7,6 +7,7 @@ import type { EventMutationAction, EventRunResult } from "../../types/run";
 import { AppError } from "../../utils/errors";
 import { nowIso } from "../../utils/date";
 import { airtableClientService } from "./airtable-client.service";
+import { airtableSchemaService } from "./airtable-schema.service";
 
 const toNumber = (value: unknown): number => {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -51,19 +52,25 @@ export class AirtableIncrementService {
       });
     }
 
-    const fieldMap = input.site.airtable.fieldMapping;
+    const resolvedDestination = env.airtableToken
+      ? await airtableSchemaService.resolveDestination({
+          site: input.site,
+          logger: input.logger,
+        })
+      : null;
+    const fieldMap = resolvedDestination?.fieldNames;
     const existingRecord = env.airtableToken
       ? await airtableClientService.findRecordBySyncKey({
           baseId: input.site.airtable.baseId,
-          tableName: input.site.airtable.tableName,
-          syncKeyFieldName: fieldMap.syncKey,
+          tableId: input.site.airtable.tableId,
+          syncKeyFieldName: fieldMap?.syncKey ?? "Sync Key",
           syncKey: input.event.syncKey,
           logger: input.logger,
         })
       : null;
-    const currentVisits = toNumber(existingRecord?.fields[fieldMap.visits]);
+    const currentVisits = toNumber(existingRecord?.fields[fieldMap?.visits ?? ""]);
     const currentRegistrations = toNumber(
-      existingRecord?.fields[fieldMap.registrations],
+      existingRecord?.fields[fieldMap?.registrations ?? ""],
     );
     const nextTotals = {
       visits: currentVisits + input.event.visitsDelta,
@@ -76,10 +83,18 @@ export class AirtableIncrementService {
         : "created";
 
     if (!input.dryRun) {
+      if (!resolvedDestination || !fieldMap) {
+        throw new AppError({
+          message: "Airtable destination schema could not be resolved",
+          code: "AIRTABLE_SCHEMA_UNAVAILABLE",
+          statusCode: 500,
+        });
+      }
+
       if (existingRecord) {
         await airtableClientService.updateRecord({
           baseId: input.site.airtable.baseId,
-          tableName: input.site.airtable.tableName,
+          tableId: input.site.airtable.tableId,
           recordId: existingRecord.id,
           fields: {
             [fieldMap.visits]: nextTotals.visits,
@@ -99,8 +114,8 @@ export class AirtableIncrementService {
       } else {
         const createdRecord = await airtableClientService.createRecord({
           baseId: input.site.airtable.baseId,
-          tableName: input.site.airtable.tableName,
-          fields: this.buildRecordFields(input.site, input.event, nextTotals),
+          tableId: input.site.airtable.tableId,
+          fields: this.buildRecordFields(fieldMap, input.site, input.event, nextTotals),
           logger: input.logger,
         });
 
@@ -146,6 +161,7 @@ export class AirtableIncrementService {
   }
 
   private buildRecordFields(
+    fieldMap: SiteConfig["airtable"]["fieldIds"],
     site: SiteConfig,
     event: NormalizedTrackingEvent,
     totals: {
@@ -153,8 +169,6 @@ export class AirtableIncrementService {
       registrations: number;
     },
   ): Record<string, unknown> {
-    const fieldMap = site.airtable.fieldMapping;
-
     return {
       [fieldMap.siteKey]: site.siteKey,
       [fieldMap.route]: event.route,

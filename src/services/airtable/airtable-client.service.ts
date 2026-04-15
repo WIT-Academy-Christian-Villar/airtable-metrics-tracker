@@ -24,12 +24,12 @@ interface AirtableBulkMutationResponse {
 export class AirtableClientService {
   public async upsertRecords(input: {
     baseId: string;
-    tableName: string;
+    tableId: string;
     records: Array<Record<string, unknown>>;
     upsertFields: string[];
     logger: Logger;
   }): Promise<AirtableBulkMutationResponse> {
-    const endpoint = this.tableEndpoint(input.baseId, input.tableName);
+    const endpoint = this.tableEndpoint(input.baseId, input.tableId);
 
     return fetchJson<AirtableBulkMutationResponse>(endpoint, {
       method: "PATCH",
@@ -48,12 +48,12 @@ export class AirtableClientService {
 
   public async findRecordBySyncKey(input: {
     baseId: string;
-    tableName: string;
+    tableId: string;
     syncKeyFieldName: string;
     syncKey: string;
     logger: Logger;
   }): Promise<AirtableRecord | null> {
-    const endpoint = this.tableEndpoint(input.baseId, input.tableName);
+    const endpoint = this.tableEndpoint(input.baseId, input.tableId);
     const response = await fetchJson<AirtableListResponse>(endpoint, {
       method: "GET",
       headers: this.authHeaders(),
@@ -73,11 +73,11 @@ export class AirtableClientService {
 
   public async createRecord(input: {
     baseId: string;
-    tableName: string;
+    tableId: string;
     fields: Record<string, unknown>;
     logger: Logger;
   }): Promise<AirtableRecord> {
-    const endpoint = this.tableEndpoint(input.baseId, input.tableName);
+    const endpoint = this.tableEndpoint(input.baseId, input.tableId);
 
     return fetchJson<AirtableRecord>(endpoint, {
       method: "POST",
@@ -93,12 +93,12 @@ export class AirtableClientService {
 
   public async updateRecord(input: {
     baseId: string;
-    tableName: string;
+    tableId: string;
     recordId: string;
     fields: Record<string, unknown>;
     logger: Logger;
   }): Promise<AirtableRecord> {
-    const endpoint = `${this.tableEndpoint(input.baseId, input.tableName)}/${input.recordId}`;
+    const endpoint = `${this.tableEndpoint(input.baseId, input.tableId)}/${input.recordId}`;
 
     return fetchJson<AirtableRecord>(endpoint, {
       method: "PATCH",
@@ -112,8 +112,8 @@ export class AirtableClientService {
     });
   }
 
-  private tableEndpoint(baseId: string, tableName: string): string {
-    return `${env.airtableApiBase}/${baseId}/${encodeURIComponent(tableName)}`;
+  private tableEndpoint(baseId: string, tableId: string): string {
+    return `${env.airtableApiBase}/${baseId}/${encodeURIComponent(tableId)}`;
   }
 
   private authHeaders(): Record<string, string> {

@@ -3,6 +3,27 @@ import { describe, expect, it } from "vitest";
 import { siteConfigSchema } from "../src/schemas/site.schema";
 import { eventNormalizerService } from "../src/services/normalization/event-normalizer.service";
 
+const airtableConfig = {
+  baseId: "app123",
+  tableId: "tbl123",
+  fieldIds: {
+    siteKey: "fldSiteKey",
+    route: "fldRoute",
+    dateBucket: "fldDateBucket",
+    visits: "fldVisits",
+    registrations: "fldRegistrations",
+    utmSource: "fldUtmSource",
+    utmMedium: "fldUtmMedium",
+    utmCampaign: "fldUtmCampaign",
+    utmTerm: "fldUtmTerm",
+    utmContent: "fldUtmContent",
+    sources: "fldSources",
+    capturedAt: "fldCapturedAt",
+    syncKey: "fldSyncKey",
+  },
+  upsertFieldIds: ["fldSyncKey"],
+};
+
 describe("eventNormalizerService", () => {
   it("builds a normalized visit event with route, utms and sync key", () => {
     const site = siteConfigSchema.parse({
@@ -18,10 +39,7 @@ describe("eventNormalizerService", () => {
           config: {},
         },
       },
-      airtable: {
-        baseId: "app123",
-        tableName: "Traffic Metrics",
-      },
+      airtable: airtableConfig,
     });
 
     const normalized = eventNormalizerService.normalize(site, {
@@ -69,10 +87,7 @@ describe("eventNormalizerService", () => {
         fallbackRoute: "/",
         stripTrailingSlash: true,
       },
-      airtable: {
-        baseId: "app123",
-        tableName: "Traffic Metrics",
-      },
+      airtable: airtableConfig,
     });
 
     const normalized = eventNormalizerService.normalize(site, {
