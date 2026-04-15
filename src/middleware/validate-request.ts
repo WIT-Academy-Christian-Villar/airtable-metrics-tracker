@@ -4,6 +4,19 @@ import { ZodError } from "zod";
 
 import { AppError } from "../utils/errors";
 
+const setRequestValue = (
+  req: Request,
+  key: "body" | "params" | "query",
+  value: unknown,
+): void => {
+  Object.defineProperty(req, key, {
+    value,
+    configurable: true,
+    enumerable: true,
+    writable: true,
+  });
+};
+
 export const validateRequest = (schemas: {
   body?: ZodTypeAny;
   params?: ZodTypeAny;
@@ -12,15 +25,15 @@ export const validateRequest = (schemas: {
   return (req: Request, _res: Response, next: NextFunction): void => {
     try {
       if (schemas.body) {
-        req.body = schemas.body.parse(req.body ?? {});
+        setRequestValue(req, "body", schemas.body.parse(req.body ?? {}));
       }
 
       if (schemas.params) {
-        req.params = schemas.params.parse(req.params);
+        setRequestValue(req, "params", schemas.params.parse(req.params));
       }
 
       if (schemas.query) {
-        req.query = schemas.query.parse(req.query);
+        setRequestValue(req, "query", schemas.query.parse(req.query));
       }
 
       next();

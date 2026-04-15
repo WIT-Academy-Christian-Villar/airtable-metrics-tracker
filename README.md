@@ -69,6 +69,7 @@ src/
 ## Endpoints iniciales
 
 - `GET /health`
+- `GET /tracker.js`
 - `GET /c/v.gif`
 - `GET /c/r.gif`
 - `POST /events/visit`
@@ -134,6 +135,18 @@ Notas:
 
 ## Tracking pixel para visitas
 
+Si queres evitar agregar varios snippets manuales, la opcion recomendada ahora es usar un solo script remoto:
+
+```html
+<script async src="https://tu-api.com/tracker.js?siteKey=marketing-main"></script>
+```
+
+Ese script:
+
+- manda `visit` automaticamente al cargar
+- puede detectar `registration` si le pasas reglas de auto-deteccion
+- usa internamente los endpoints `GET /c/v.gif` y `GET /c/r.gif`
+
 Si queres instrumentar visitas con una sola linea y sin depender del hosting, podes usar:
 
 ```html
@@ -155,6 +168,24 @@ El endpoint:
 - responde un `1x1 gif` transparente
 
 ## Tracking pixel para registros
+
+La forma mas practica para no tocar dos lugares del codigo es usar un solo `tracker.js` con configuracion en la URL:
+
+```html
+<script async src="https://tu-api.com/tracker.js?siteKey=marketing-main&registrationUrlContains=api.academywit.com/airtable&confirmationPath=/confirmar-registro/"></script>
+```
+
+Con eso el script:
+
+- manda `visit` en el page load
+- intenta detectar `registration` cuando un `fetch` o `XMLHttpRequest` exitoso coincide con `registrationUrlContains`
+- usa `confirmationPath` como fallback si la confirmacion ocurre en otra pagina
+
+Para la landing que revisamos, el uso esperado seria parecido a este:
+
+```html
+<script async src="https://tu-api.com/tracker.js?siteKey=codigo-financiero-registro&registrationUrlContains=api.academywit.com/airtable/appv3vGno7NgGhyfQ/tbl2ouMlJLLnxPeGi/upsert&confirmationPath=/confirmar-registro/"></script>
+```
 
 Si queres instrumentar `registration` con una minima intervencion del lado pagina, el endpoint equivalente es:
 
